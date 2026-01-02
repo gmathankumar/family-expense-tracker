@@ -292,14 +292,6 @@ npm install
 OLLAMA_HOST=http://localhost:11434 npm start
 ```
 
-### Adding New Features
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
 ## Performance
 
 - **Model Size**: 1.3GB (Llama 3.2)
@@ -332,19 +324,9 @@ docker exec -it ollama ollama list
 - [ ] React web dashboard
 - [ ] Analytics and charts
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
 ## License
 
 MIT License - feel free to use this project for personal or commercial purposes.
-
-## Support
-
-- 🐛 **Issues**: [GitHub Issues](https://github.com/yourusername/family-expense-tracker/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/yourusername/family-expense-tracker/discussions)
-- 📧 **Email**: your.email@example.com
 
 ## Acknowledgments
 
