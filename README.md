@@ -30,7 +30,7 @@ A smart Telegram bot for tracking family expenses using natural language, powere
 ### 1. Clone the Repository
 
 ```bash
-git clone [https://github.com/yourusername/family-expense-tracker.git](https://github.com/gmathankumar/family-expense-tracker.git)
+git clone https://github.com/gmathankumar/family-expense-tracker.git
 cd family-expense-tracker
 ```
 
