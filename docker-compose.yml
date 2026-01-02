@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - expense-network
+
+  telegram-bot:
+    build: ./telegram-bot
+    container_name: expense-bot
+    restart: unless-stopped
+    env_file:
+      - ./telegram-bot/.env
+    volumes:
+      - ./telegram-bot/src:/app/src
+    depends_on:
+      - ollama
+    networks:
+      - expense-network
+
+volumes:
+  ollama_data:
+
+networks:
+  expense-network:
+    driver: bridge
