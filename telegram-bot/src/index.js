@@ -8,16 +8,32 @@ import {
   handleFamilyExpenses,
   handleFamilyMonthlySummary,
 } from "./bot.js";
-import { initOllama } from "./init-ollama.js";
 
 config();
 
 async function startBot() {
   try {
-    console.log("Initializing Ollama...");
-    await initOllama();
+    // Validate required environment variables
+    const requiredEnvVars = [
+      "TELEGRAM_BOT_TOKEN",
+      "SUPABASE_URL",
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "OPENROUTER_API_KEY",
+    ];
 
-    console.log("Starting Telegram bot...");
+    const missingVars = requiredEnvVars.filter(
+      (varName) => !process.env[varName]
+    );
+
+    if (missingVars.length > 0) {
+      throw new Error(
+        `Missing required environment variables: ${missingVars.join(", ")}`
+      );
+    }
+
+    console.log("🤖 Starting Family Expense Tracker Bot...");
+    console.log("✅ Environment variables validated");
+
     const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {
       polling: {
         interval: 300,
@@ -28,7 +44,7 @@ async function startBot() {
       },
     });
 
-    console.log("Bot started successfully! ✅");
+    console.log("✅ Telegram bot connected");
 
     // Set bot commands (shows in Telegram menu)
     await bot.setMyCommands([
@@ -41,11 +57,13 @@ async function startBot() {
     ]);
 
     console.log("✅ Bot commands registered");
+    console.log("🚀 Bot is now running!");
+    console.log("");
 
     // Handle /start command
     bot.onText(/\/start/, (msg) => {
       const chatId = msg.chat.id;
-      console.log(`User ${chatId} started the bot`);
+      console.log(`📱 User ${chatId} started the bot`);
 
       bot.sendMessage(
         chatId,
@@ -55,8 +73,9 @@ async function startBot() {
           '• "Add 25 for coffee"\n' +
           '• "Paid 100 for electricity"\n' +
           '• "Bought lunch for 12.50"\n\n' +
-          "📱 Or use the menu button to see all commands!\n\n" +
-          `Your Chat ID: ${chatId}`
+          "📱 Or use the menu button (☰) to see all commands!\n\n" +
+          `Your Chat ID: ${chatId}\n` +
+          "(Add this to your Supabase authorized_users table)"
       );
     });
 
@@ -120,29 +139,44 @@ async function startBot() {
       );
     });
 
+    // Better polling error handling
     bot.on("polling_error", (error) => {
-      console.error("Polling error:", error.code);
+      console.error("⚠️ Polling error:", error.code);
 
       if (
         error.code === "EFATAL" ||
         error.code === "ECONNRESET" ||
         error.code === "ETELEGRAM"
       ) {
-        console.log("Telegram connection interrupted, will auto-retry...");
+        console.log("↻ Telegram connection interrupted, will auto-retry...");
       } else {
-        console.error("Unexpected polling error:", error);
+        console.error("❌ Unexpected polling error:", error);
       }
     });
 
+    // Handle process errors gracefully
     process.on("uncaughtException", (error) => {
-      console.error("Uncaught exception:", error);
+      console.error("❌ Uncaught exception:", error);
     });
 
     process.on("unhandledRejection", (error) => {
-      console.error("Unhandled rejection:", error);
+      console.error("❌ Unhandled rejection:", error);
+    });
+
+    // Graceful shutdown
+    process.on("SIGTERM", () => {
+      console.log("📴 Received SIGTERM, shutting down gracefully...");
+      bot.stopPolling();
+      process.exit(0);
+    });
+
+    process.on("SIGINT", () => {
+      console.log("📴 Received SIGINT, shutting down gracefully...");
+      bot.stopPolling();
+      process.exit(0);
     });
   } catch (error) {
-    console.error("Failed to start bot:", error);
+    console.error("❌ Failed to start bot:", error);
     process.exit(1);
   }
 }

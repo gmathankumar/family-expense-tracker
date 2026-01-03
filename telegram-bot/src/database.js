@@ -1,4 +1,19 @@
 import { createClient } from "@supabase/supabase-js";
+import { config } from "dotenv";
+
+// Load environment variables FIRST
+config();
+
+// Validate required environment variables
+if (!process.env.SUPABASE_URL) {
+  throw new Error("Missing required environment variable: SUPABASE_URL");
+}
+
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error(
+    "Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY"
+  );
+}
 
 // Use service role key for the bot
 // This is safe because:

@@ -5,25 +5,26 @@ A smart Telegram bot for tracking family expenses using natural language, powere
 ## Features ✨
 
 - 🗣️ **Natural Language Processing** - Just say "Spent 50 at Tesco" or "Add 25 for coffee"
-- 🤖 **Local LLM** - Powered by Ollama (Llama 3.2) - completely free and private
+- 🤖 **Powered by OpenRouter** - Free LLM API (Llama 3.2, Gemma 2, and more)
 - 🔒 **Secure** - Row Level Security (RLS) with authorized user whitelist
 - 👨‍👩‍👧‍👦 **Family Sharing** - Multiple family members can track expenses together
 - 📊 **Smart Categorization** - Automatic expense categorization
 - 📈 **Monthly Summaries** - Track spending by category
-- 🐳 **Docker Ready** - Easy deployment with Docker Compose
+- 🐳 **Single Container** - Easy deployment anywhere (Railway, Render, Fly.io)
+- 🆓 **Completely Free** - No infrastructure costs with free tiers
 
 ## Tech Stack
 
 - **Bot**: Node.js with Telegram Bot API
 - **Database**: Supabase (PostgreSQL with RLS)
-- **LLM**: Ollama (Llama 3.2 - 1.3GB model)
-- **Deployment**: Docker & Docker Compose
+- **LLM**: OpenRouter API (free tier with multiple models)
+- **Deployment**: Docker (single container - deploy anywhere!)
 
 ## Prerequisites
 
-- Docker & Docker Compose installed
 - Telegram account
 - Supabase account (free tier)
+- OpenRouter account (free tier with credits)
 
 ## Quick Start 🚀
 
@@ -40,56 +41,11 @@ cd family-expense-tracker
 2. Send `/newbot` and follow the instructions
 3. Copy the **Bot Token** (looks like: `123456789:ABCdefGHIjklMNOpqrsTUVwxyz`)
 
-### 3. Set Up Supabase
+### 3. Set Up OpenRouter
 
-1. Create a new project at [supabase.com](https://supabase.com)
-2. Go to **SQL Editor** and run the setup script:
-
-```sql
--- Create authorized users table
-CREATE TABLE authorized_users (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  telegram_chat_id BIGINT UNIQUE NOT NULL,
-  name TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Create expenses table
-CREATE TABLE expenses (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  amount DECIMAL(10,2) NOT NULL,
-  category TEXT NOT NULL,
-  description TEXT,
-  user_id UUID REFERENCES authorized_users(id),
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Create indexes
-CREATE INDEX idx_expenses_user_id ON expenses(user_id);
-CREATE INDEX idx_expenses_created_at ON expenses(created_at DESC);
-CREATE INDEX idx_authorized_users_chat_id ON authorized_users(telegram_chat_id);
-
--- Enable RLS
-ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
-ALTER TABLE authorized_users ENABLE ROW LEVEL SECURITY;
-
--- RLS Policies
-CREATE POLICY "Service role has full access to expenses"
-  ON expenses FOR ALL TO service_role
-  USING (true) WITH CHECK (true);
-
-CREATE POLICY "Service role has full access to authorized users"
-  ON authorized_users FOR ALL TO service_role
-  USING (true) WITH CHECK (true);
-
-CREATE POLICY "Anyone can read authorized users for verification"
-  ON authorized_users FOR SELECT TO authenticated, anon
-  USING (true);
-```
-
-3. Get your credentials from **Project Settings → API**:
-   - Project URL (e.g., `https://xxxxx.supabase.co`)
-   - Service Role Key (keep this secret!)
+1. Create account at [openrouter.ai](https://openrouter.ai)
+2. Go to **Keys** and create a new API key
+3. You get free credits to start! Models like `meta-llama/llama-3.2-3b-instruct:free` are completely free
 
 ### 4. Configure Environment Variables
 
@@ -99,23 +55,44 @@ Create `telegram-bot/.env`:
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
-OLLAMA_HOST=http://ollama:11434
+OPENROUTER_API_KEY=your_openrouter_api_key_here
 ```
 
-### 5. Start the Bot
+### 5. Deploy to Railway (Recommended) 🚂
+
+**The easiest way:**
+
+1. Push code to GitHub
+2. Go to [railway.app](https://railway.app) and sign in
+3. **New Project** → **Deploy from GitHub repo**
+4. Select your repository
+5. Add environment variables:
+   ```
+   TELEGRAM_BOT_TOKEN=your_token
+   SUPABASE_URL=your_url
+   SUPABASE_SERVICE_ROLE_KEY=your_key
+   OPENROUTER_API_KEY=your_key
+   ```
+6. Deploy! Railway will automatically build and start your bot
+
+**That's it!** Your bot is now live 🎉
+
+### 6. Alternative: Local Development with Docker
 
 ```bash
-# Start all services
-docker-compose up -d
+# Build and run
+docker build -t expense-tracker-bot .
+docker run -d --env-file telegram-bot/.env expense-tracker-bot
 
-# Pull the LLM model (first time only, ~1.3GB)
-docker exec -it ollama ollama pull llama3.2
-
-# View logs
-docker logs -f expense-bot
+# Or run locally without Docker
+cd telegram-bot
+npm install
+npm start
 ```
 
-### 6. Get Your Chat IDs
+**For detailed local development, see [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md)**
+
+### 7. Get Your Chat IDs
 
 1. Message your bot in Telegram with `/start`
 2. The bot will reply with your Chat ID
@@ -128,9 +105,10 @@ INSERT INTO authorized_users (telegram_chat_id, name) VALUES
   (555666777, 'Family Member 2');
 ```
 
-### 7. Start Tracking! 🎉
+### 8. Start Tracking! 🎉
 
 Message your bot:
+
 - "Spent 50 at Tesco"
 - "Add 25 for coffee"
 - "Paid 100 for electricity"
@@ -140,95 +118,86 @@ Message your bot:
 
 ## Bot Commands
 
-| Command | Description |
-|---------|-------------|
-| `/recent` | Your recent expenses |
-| `/family` | All family expenses |
-| `/summary` | Your monthly summary |
+| Command          | Description            |
+| ---------------- | ---------------------- |
+| `/recent`        | Your recent expenses   |
+| `/family`        | All family expenses    |
+| `/summary`       | Your monthly summary   |
 | `/familysummary` | Family monthly summary |
-| `/delete` | Delete last expense |
-| `/help` | Show help message |
+| `/delete`        | Delete last expense    |
+| `/help`          | Show help message      |
 
 ## Free Deployment Options 🆓
 
-### Option 1: Railway.app
+### ⭐ Railway.app (Recommended - Easiest!)
 
-1. Create account at [railway.app](https://railway.app)
-2. Click **New Project → Deploy from GitHub**
-3. Connect your repository
+**Perfect for single-container apps like this!**
+
+1. Push code to GitHub
+2. Go to [railway.app](https://railway.app)
+3. **New Project** → **Deploy from GitHub**
 4. Add environment variables
-5. Railway will auto-deploy on push
+5. Done! Auto-deploys on every push
 
-**Cost**: Free tier includes $5/month credit
+**Cost**: $5/month free credit (plenty for this bot)
 
-### Option 2: Render.com
+### Render.com
 
-1. Create account at [render.com](https://render.com)
-2. Click **New → Docker**
-3. Connect GitHub repo
-4. Set Docker Compose as build command
-5. Add environment variables
+1. Go to [render.com](https://render.com)
+2. **New** → **Web Service** → Connect GitHub
+3. **Environment**: Docker
+4. Add environment variables
+5. Deploy
 
-**Cost**: Free tier available (with limitations)
+**Cost**: Free tier (sleeps after inactivity)
 
-### Option 3: Fly.io
+### Fly.io
 
 ```bash
-# Install flyctl
-curl -L https://fly.io/install.sh | sh
-
-# Login and launch
-fly auth login
 fly launch
-
-# Deploy
+fly secrets set TELEGRAM_BOT_TOKEN=xxx SUPABASE_URL=xxx ...
 fly deploy
 ```
 
-**Cost**: Free allowance includes 3 shared VMs
+**Cost**: Free tier with 3 shared VMs
 
-### Option 4: Your Own VPS
-
-Any VPS with Docker installed:
-- DigitalOcean ($4/month)
-- Hetzner (€3.79/month)
-- Vultr ($2.50/month)
+### Your Own VPS
 
 ```bash
-# On your VPS
 git clone https://github.com/yourusername/family-expense-tracker.git
 cd family-expense-tracker
-docker-compose up -d
-docker exec -it ollama ollama pull llama3.2
+docker build -t expense-bot .
+docker run -d --env-file telegram-bot/.env expense-bot
 ```
+
+**Cost**: $3-5/month (Hetzner, DigitalOcean, Vultr)
 
 ## Project Structure
 
 ```
 family-expense-tracker/
-├── docker-compose.yml
+├── Dockerfile                 # Single container build
+├── railway.toml              # Railway configuration
 ├── telegram-bot/
-│   ├── Dockerfile
 │   ├── package.json
 │   ├── .env (create this)
 │   └── src/
 │       ├── index.js          # Main bot entry
-│       ├── bot.js             # Command handlers
-│       ├── llm.js             # LLM integration
-│       ├── database.js        # Supabase queries
-│       ├── init-ollama.js     # Ollama initialization
-│       └── utils.js           # Utility functions
+│       ├── bot.js            # Command handlers
+│       ├── llm.js            # OpenRouter integration
+│       ├── database.js       # Supabase queries
+│       └── utils.js          # Utility functions
 └── README.md
 ```
 
 ## Environment Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `TELEGRAM_BOT_TOKEN` | Bot token from BotFather | `123456:ABCdef...` |
-| `SUPABASE_URL` | Supabase project URL | `https://xxx.supabase.co` |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role key | `eyJhbG...` |
-| `OLLAMA_HOST` | Ollama API endpoint | `http://ollama:11434` |
+| Variable                    | Description              | Example                   |
+| --------------------------- | ------------------------ | ------------------------- |
+| `TELEGRAM_BOT_TOKEN`        | Bot token from BotFather | `123456:ABCdef...`        |
+| `SUPABASE_URL`              | Supabase project URL     | `https://xxx.supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key         | `eyJhbG...`               |
+| `OPENROUTER_API_KEY`        | OpenRouter API key       | `sk-or-v1-...`            |
 
 ## Security Features 🔒
 
@@ -241,30 +210,23 @@ family-expense-tracker/
 ## Troubleshooting
 
 ### Bot not responding
+
 ```bash
-# Check if containers are running
-docker ps
+# Check logs on Railway
+# Go to your project → Deployments → View Logs
 
-# View bot logs
-docker logs expense-bot
-
-# Restart bot
-docker-compose restart telegram-bot
+# Or locally with Docker
+docker logs expense-tracker-bot
 ```
 
-### Ollama model issues
-```bash
-# Check if model is downloaded
-docker exec -it ollama ollama list
+### OpenRouter API errors
 
-# Re-pull model
-docker exec -it ollama ollama pull llama3.2
-
-# Test model directly
-docker exec -it ollama ollama run llama3.2 "test"
-```
+- Check your API key is valid
+- Verify you have credits remaining (free tier gives you credits)
+- Check rate limits
 
 ### Database connection issues
+
 ```bash
 # Test Supabase connection
 curl https://your-project.supabase.co/rest/v1/
@@ -273,6 +235,7 @@ curl https://your-project.supabase.co/rest/v1/
 ```
 
 ### Unauthorized access errors
+
 ```bash
 # Verify your chat ID is in authorized_users table
 # Message the bot with /start to see your Chat ID
@@ -292,12 +255,21 @@ npm install
 OLLAMA_HOST=http://localhost:11434 npm start
 ```
 
+### Adding New Features
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
 ## Performance
 
-- **Model Size**: 1.3GB (Llama 3.2)
-- **RAM Usage**: ~2GB (bot + Ollama)
-- **CPU**: Works on basic VPS (1 vCPU)
-- **Response Time**: 1-3 seconds per expense
+- **No Local Model** - Uses cloud API, instant responses
+- **RAM Usage** - ~100MB (lightweight single container)
+- **CPU** - Minimal, works on smallest instances
+- **Response Time** - 1-2 seconds per expense
+- **Cost** - Free tier is sufficient for personal/family use
 
 ## Upgrading
 
@@ -324,16 +296,27 @@ docker exec -it ollama ollama list
 - [ ] React web dashboard
 - [ ] Analytics and charts
 
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
 ## License
 
 MIT License - feel free to use this project for personal or commercial purposes.
 
+## Support
+
+- 🐛 **Issues**: [GitHub Issues](https://github.com/yourusername/family-expense-tracker/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/yourusername/family-expense-tracker/discussions)
+- 📧 **Email**: your.email@example.com
+
 ## Acknowledgments
 
-- [Ollama](https://ollama.ai/) - Local LLM runtime
+- [OpenRouter](https://openrouter.ai/) - Free LLM API access
 - [Supabase](https://supabase.com/) - Backend as a Service
 - [Telegram Bot API](https://core.telegram.org/bots/api) - Bot platform
 - [Llama 3.2](https://ai.meta.com/llama/) - Meta's open-source LLM
+- [Railway](https://railway.app/) - Easy deployment platform
 
 ---
 

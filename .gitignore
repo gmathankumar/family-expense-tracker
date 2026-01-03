@@ -16,9 +16,6 @@ yarn.lock
 logs/
 *.log
 
-# Docker
-.docker/
-
 # IDE
 .vscode/
 .idea/
@@ -40,9 +37,6 @@ Thumbs.db
 # Database
 *.sqlite
 *.db
-
-# Ollama data (if running locally)
-ollama_data/
 
 # Build outputs
 dist/

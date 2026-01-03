@@ -1,10 +1,42 @@
 {
-  "name": "expense-tracker-bot",
-  "version": "1.0.0",
+  "name": "family-expense-tracker-bot",
+  "version": "2.0.0",
+  "description": "Smart Telegram bot for family expense tracking with natural language processing",
   "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "lint": "eslint src/"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "expense",
+    "tracker",
+    "family",
+    "budget",
+    "llm",
+    "openrouter"
+  ],
+  "author": "Mathan Kumar",
+  "license": "MIT",
   "dependencies": {
     "node-telegram-bot-api": "^0.66.0",
     "@supabase/supabase-js": "^2.39.0",
     "dotenv": "^16.3.1"
-  }
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gmathankumar/family-expense-tracker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gmathankumar/family-expense-tracker/issues"
+  },
+  "homepage": "https://github.com/gmathankumar/family-expense-tracker#readme"
 }
