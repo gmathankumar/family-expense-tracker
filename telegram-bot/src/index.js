@@ -1,5 +1,8 @@
-import TelegramBot from "node-telegram-bot-api";
 import { config } from "dotenv";
+
+config();
+
+import TelegramBot from "node-telegram-bot-api";
 import {
   handleMessage,
   handleRecentTransactions,
@@ -8,8 +11,6 @@ import {
   handleFamilyExpenses,
   handleFamilyMonthlySummary,
 } from "./bot.js";
-
-config();
 
 async function startBot() {
   try {
@@ -34,12 +35,16 @@ async function startBot() {
     console.log("🤖 Starting Family Expense Tracker Bot...");
     console.log("✅ Environment variables validated");
 
+    let consecutiveErrors = 0;
+    const MAX_CONSECUTIVE_ERRORS = 10;
+
     const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {
       polling: {
-        interval: 300,
+        interval: 1000, // Increased from 300ms to 1s to reduce request frequency
         autoStart: true,
         params: {
-          timeout: 10,
+          timeout: 30, // Increased from 10 to 30 for better stability
+          allowed_updates: ["message"], // Only listen to messages to reduce payload
         },
       },
     });
@@ -139,18 +144,44 @@ async function startBot() {
       );
     });
 
-    // Better polling error handling
+    // Better polling error handling with exponential backoff
     bot.on("polling_error", (error) => {
-      console.error("⚠️ Polling error:", error.code);
+      console.error("⚠️ Polling error:", error.code, error.message);
 
       if (
         error.code === "EFATAL" ||
         error.code === "ECONNRESET" ||
         error.code === "ETELEGRAM"
       ) {
-        console.log("↻ Telegram connection interrupted, will auto-retry...");
+        consecutiveErrors++;
+        
+        if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+          console.error(
+            `❌ Too many consecutive errors (${consecutiveErrors}), restarting polling...`
+          );
+          // Stop and restart polling to reset connection
+          bot.stopPolling();
+          setTimeout(() => {
+            console.log("↻ Restarting polling...");
+            bot.startPolling();
+          }, 5000); // Wait 5 seconds before restarting
+          consecutiveErrors = 0;
+        } else {
+          console.log(
+            `↻ Telegram connection interrupted (${consecutiveErrors}/${MAX_CONSECUTIVE_ERRORS}), retrying...`
+          );
+        }
       } else {
         console.error("❌ Unexpected polling error:", error);
+        consecutiveErrors = 0;
+      }
+    });
+
+    // Reset error counter on successful message
+    bot.on("message", () => {
+      if (consecutiveErrors > 0) {
+        console.log("✅ Connection restored");
+        consecutiveErrors = 0;
       }
     });
 

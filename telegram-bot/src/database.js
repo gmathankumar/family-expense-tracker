@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { config } from "dotenv";
 
-// Load environment variables FIRST
+// Ensure environment variables are loaded
 config();
 
 // Validate required environment variables
