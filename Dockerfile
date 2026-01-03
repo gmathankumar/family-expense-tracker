@@ -17,8 +17,8 @@ COPY telegram-bot/src ./src
 EXPOSE 3000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD node -e "console.log('healthy')" || exit 1
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+#   CMD node -e "console.log('healthy')" || exit 1
 
 # Start the bot
 CMD ["node", "src/index.js"]
