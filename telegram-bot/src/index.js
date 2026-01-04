@@ -101,13 +101,13 @@ async function startBot() {
       await handleRecentTransactions(bot, msg.chat.id);
     });
 
-    // Handle /family command
-    bot.onText(/\/family/, async (msg) => {
+    // Handle /family command (word boundary to avoid matching /familysummary)
+    bot.onText(/\/family(?:\s|$)/, async (msg) => {
       await handleFamilyExpenses(bot, msg.chat.id);
     });
 
-    // Handle /summary command
-    bot.onText(/\/summary/, async (msg) => {
+    // Handle /summary command (word boundary to avoid matching /familysummary)
+    bot.onText(/\/summary(?:\s|$)/, async (msg) => {
       await handleMonthlySummary(bot, msg.chat.id);
     });
 

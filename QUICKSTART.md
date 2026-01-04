@@ -32,34 +32,6 @@ OPENROUTER_API_KEY=paste_your_openrouter_key_here
 
 # 7. Set up Supabase database
 # In Supabase SQL Editor, run:
-CREATE TABLE authorized_users (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  telegram_chat_id BIGINT UNIQUE NOT NULL,
-  name TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE expenses (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  amount DECIMAL(10,2) NOT NULL,
-  category TEXT NOT NULL,
-  description TEXT,
-  user_id UUID REFERENCES authorized_users(id),
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX idx_expenses_user_id ON expenses(user_id);
-CREATE INDEX idx_expenses_created_at ON expenses(created_at DESC);
-
-ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
-ALTER TABLE authorized_users ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Service role full access expenses"
-  ON expenses FOR ALL TO service_role USING (true) WITH CHECK (true);
-
-CREATE POLICY "Service role full access users"
-  ON authorized_users FOR ALL TO service_role USING (true) WITH CHECK (true);
-
 # 8. Get your Chat ID
 # Message your bot on Telegram: /start
 # Bot replies with your Chat ID
@@ -68,6 +40,10 @@ CREATE POLICY "Service role full access users"
 # In Supabase SQL Editor:
 INSERT INTO authorized_users (telegram_chat_id, name) VALUES
 (YOUR_CHAT_ID_HERE, 'Your Name');
+
+ UPDATE authorized_users 
+ SET family_id = 'family-id-here', auth_user_id = 'auth-user-id-here'
+ WHERE telegram_chat_id = new-member-chat-id;
 
 # ✅ Done! Try: "Spent 50 at Tesco"
 ```
