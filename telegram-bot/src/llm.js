@@ -2,7 +2,7 @@ import { extractAmountFromMessage, getDefaultCategory, isValidCategory } from '.
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'deepseek/deepseek-r1-0528:free';
+const MODEL = 'meta-llama/llama-3.3-70b-instruct:free';
 
 
 export async function parseExpenseWithLLM(userMessage) {

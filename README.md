@@ -116,6 +116,12 @@ Message your bot:
 - `/family` - View family expenses
 - `/summary` - Monthly summary
 
+## Test models
+```
+cd c:\gnanasm\Misc\JS\family-expense-tracker\telegram-bot
+node src/test-llm.js "Received salary £3900"
+```
+
 ## Bot Commands
 
 | Command          | Description            |
@@ -141,25 +147,6 @@ Message your bot:
 
 **Cost**: $5/month free credit (plenty for this bot)
 
-### Render.com
-
-1. Go to [render.com](https://render.com)
-2. **New** → **Web Service** → Connect GitHub
-3. **Environment**: Docker
-4. Add environment variables
-5. Deploy
-
-**Cost**: Free tier (sleeps after inactivity)
-
-### Fly.io
-
-```bash
-fly launch
-fly secrets set TELEGRAM_BOT_TOKEN=xxx SUPABASE_URL=xxx ...
-fly deploy
-```
-
-**Cost**: Free tier with 3 shared VMs
 
 ### Your Own VPS
 
@@ -242,50 +229,6 @@ curl https://your-project.supabase.co/rest/v1/
 # Add it to Supabase using SQL Editor
 ```
 
-## Development
-
-### Local Development
-
-```bash
-# Install dependencies
-cd telegram-bot
-npm install
-
-# Run without Docker (requires Ollama installed locally)
-OLLAMA_HOST=http://localhost:11434 npm start
-```
-
-### Adding New Features
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## Performance
-
-- **No Local Model** - Uses cloud API, instant responses
-- **RAM Usage** - ~100MB (lightweight single container)
-- **CPU** - Minimal, works on smallest instances
-- **Response Time** - 1-2 seconds per expense
-- **Cost** - Free tier is sufficient for personal/family use
-
-## Upgrading
-
-```bash
-# Pull latest code
-git pull origin main
-
-# Rebuild containers
-docker-compose down
-docker-compose build --no-cache
-docker-compose up -d
-
-# Check if model needs updating
-docker exec -it ollama ollama list
-```
-
 ## Roadmap
 
 - [ ] Export expenses to CSV/Excel
@@ -295,28 +238,6 @@ docker exec -it ollama ollama list
 - [ ] Receipt photo upload with OCR
 - [ ] React web dashboard
 - [ ] Analytics and charts
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-MIT License - feel free to use this project for personal or commercial purposes.
-
-## Support
-
-- 🐛 **Issues**: [GitHub Issues](https://github.com/yourusername/family-expense-tracker/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/yourusername/family-expense-tracker/discussions)
-- 📧 **Email**: your.email@example.com
-
-## Acknowledgments
-
-- [OpenRouter](https://openrouter.ai/) - Free LLM API access
-- [Supabase](https://supabase.com/) - Backend as a Service
-- [Telegram Bot API](https://core.telegram.org/bots/api) - Bot platform
-- [Llama 3.2](https://ai.meta.com/llama/) - Meta's open-source LLM
-- [Railway](https://railway.app/) - Easy deployment platform
 
 ---
 
