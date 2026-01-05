@@ -2,7 +2,7 @@ import { extractAmountFromMessage, getDefaultCategory, isValidCategory } from '.
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'meta-llama/llama-3.2-3b-instruct:free';
+const MODEL = 'google/gemini-2.0-flash-exp:free';
 
 
 export async function parseExpenseWithLLM(userMessage) {
@@ -10,31 +10,35 @@ export async function parseExpenseWithLLM(userMessage) {
     // Extract amount directly as fallback
     const directAmount = extractAmountFromMessage(userMessage);
     
-    // Optimized prompt with your categories
-    const prompt = `Parse: "${userMessage}"
+    // Optimized prompt with clearer income/expense detection
+    const prompt = `Parse this transaction message and determine if it's INCOME, EXPENSE, or SAVINGS.
 
-Return JSON:
+Message: "${userMessage}"
+
+IMPORTANT RULES:
+1. INCOME keywords: received, earned, salary, paid, refund, returned, bonus, freelance, cashback, interest, business
+2. SAVINGS keywords: saved, invested, transferred to savings
+3. EXPENSE keywords: add, spent, bought, paid for, purchased, charged
+
+VALID CATEGORIES:
+- EXPENSE: Bills, Car, Food, Gifts, Government, Grocery, Health, Household, Leisure, Lifestyle, Others, Pranav, Purchases, Rent, Transport
+- INCOME: Business, Car Park, Carpooling, Cashback, Freelancing, Gifts, Interest, Others, Salary, Tax, Trading
+- SAVINGS: Investment, Other
+
+Return ONLY valid JSON (no markdown, no explanation):
 {
-  "transaction_type": "expense|income|savings",
-  "amount": number with 2 decimals,
-  "category": from list below,
-  "description": merchant/source
+  "transaction_type": "expense" or "income" or "savings",
+  "amount": number,
+  "category": valid category for this transaction_type,
+  "description": brief merchant/source name
 }
 
-EXPENSE (spending): Bills, Car, Food, Gifts, Government, Grocery, Health, Household, Leisure, Lifestyle, Others, Pranav, Purchases, Rent, Transport
-
-INCOME (receiving): Business, Car Park, Carpooling, Cashback, Freelancing, Gifts, Interest, Others, Salary, Tax, Trading
-
-SAVINGS (investing): Investment, Other
-
 Examples:
+"Received salary £3900" → {"transaction_type":"income","amount":3900.00,"category":"Salary","description":"Salary"}
 "Spent £4.5 at Sainsbury's" → {"transaction_type":"expense","amount":4.50,"category":"Grocery","description":"Sainsbury's"}
-"Add 50 Tesco" → {"transaction_type":"expense","amount":50.00,"category":"Grocery","description":"Tesco"}
+"Earned £500 freelance" → {"transaction_type":"income","amount":500.00,"category":"Freelancing","description":"Freelance work"}
 "Bought petrol 45" → {"transaction_type":"expense","amount":45.00,"category":"Car","description":"Petrol"}
-"Rent 850" → {"transaction_type":"expense","amount":850.00,"category":"Rent","description":"Monthly rent"}
-"Salary 2400" → {"transaction_type":"income","amount":2400.00,"category":"Salary","description":"Monthly salary"}
-"Freelance 500" → {"transaction_type":"income","amount":500.00,"category":"Freelancing","description":"Freelance work"}
-"Saved 300" → {"transaction_type":"savings","amount":300.00,"category":"Investment","description":"Savings"}`;
+"Transferred 300 to savings" → {"transaction_type":"savings","amount":300.00,"category":"Investment","description":"Savings transfer"}`;
 
     console.log(`Parsing: "${userMessage}"`);
 
@@ -50,8 +54,7 @@ Examples:
         model: MODEL,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.1,
-        max_tokens: 100,
-        response_format: { type: 'json_object' }
+        max_tokens: 200
       })
     });
 
