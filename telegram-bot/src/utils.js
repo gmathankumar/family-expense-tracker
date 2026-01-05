@@ -20,3 +20,57 @@ export function extractAmountFromMessage(message) {
 
   return null;
 }
+
+// Category definitions for the family expense tracker
+
+export const CATEGORIES = {
+  expense: [
+    'Bills',
+    'Car',
+    'Food',
+    'Gifts',
+    'Government',
+    'Grocery',
+    'Health',
+    'Household',
+    'Leisure',
+    'Lifestyle',
+    'Others',
+    'Pranav',
+    'Purchases',
+    'Rent',
+    'Transport'
+  ],
+  income: [
+    'Business',
+    'Car Park',
+    'Carpooling',
+    'Cashback',
+    'Freelancing',
+    'Gifts',
+    'Interest',
+    'Others',
+    'Salary',
+    'Tax',
+    'Trading'
+  ],
+  savings: [
+    'Investment',
+    'Other'
+  ]
+};
+
+// Validate category for transaction type
+export function isValidCategory(transactionType, category) {
+  return CATEGORIES[transactionType]?.includes(category) || false;
+}
+
+// Get default category for transaction type
+export function getDefaultCategory(transactionType) {
+  const defaults = {
+    expense: 'Others',
+    income: 'Others',
+    savings: 'Other'
+  };
+  return defaults[transactionType] || 'Others';
+}

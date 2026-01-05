@@ -1,48 +1,40 @@
-import { extractAmountFromMessage } from "./utils.js";
-import { config } from "dotenv";
-
-// Ensure environment variables are loaded
-config();
+import { extractAmountFromMessage, getDefaultCategory, isValidCategory } from './utils.js';
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const MODEL = 'meta-llama/llama-3.2-3b-instruct:free';
 
-// Using free models on OpenRouter
-// Options: meta-llama/llama-3.2-3b-instruct:free, google/gemma-2-9b-it:free, etc.
-const MODEL = "meta-llama/llama-3.2-3b-instruct:free";
 
 export async function parseExpenseWithLLM(userMessage) {
   try {
     // Extract amount directly as fallback
     const directAmount = extractAmountFromMessage(userMessage);
     
-    // Simplified, focused prompt
-    const prompt = `You are a financial transaction parser. Extract transaction details EXACTLY from the user's message.
+    // Optimized prompt with your categories
+    const prompt = `Parse: "${userMessage}"
 
-User message: "${userMessage}"
+Return JSON:
+{
+  "transaction_type": "expense|income|savings",
+  "amount": number with 2 decimals,
+  "category": from list below,
+  "description": merchant/source
+}
 
-CRITICAL RULES FOR AMOUNT:
-- Keep ALL decimal places EXACTLY as written (e.g., 4.50 stays 4.50, not 4.5 or 5)
-- Include decimals even if .00 (e.g., 50.00)
-- Do NOT round numbers
-- If no decimals mentioned, add .00
+EXPENSE (spending): Bills, Car, Food, Gifts, Government, Grocery, Health, Household, Leisure, Lifestyle, Others, Pranav, Purchases, Rent, Transport
 
-Return JSON with:
-- transaction_type: "expense" (spent/paid/bought), "income" (received/earned/salary), or "savings" (saved/invested)
-- amount: number with decimals (e.g., 4.50 not 4.5)
-- category: best match from list below
-- description - Source/merchant name or what it's for
+INCOME (receiving): Business, Car Park, Carpooling, Cashback, Freelancing, Gifts, Interest, Others, Salary, Tax, Trading
 
-Categories:
-EXPENSE: Grocery, Transport, Food, Entertainment, Bills, Health, Shopping, Other
-INCOME: Salary, Freelance, Business, Investment, Gift, Other  
-SAVINGS: Emergency Fund, Retirement, Investment, General, Goal
+SAVINGS (investing): Investment, Other
 
 Examples:
-"Spent £4.5 at Sainsbury's" -> {"transaction_type":"expense","amount":4.50,"category":"Grocery","description":"Sainsbury's"}
-"Add 50 Tesco" -> {"transaction_type":"expense","amount":50.00,"category":"Grocery","description":"Tesco"}
-"Salary 2400" -> {"transaction_type":"income","amount":2400.00,"category":"Salary","description":"Monthly salary"}
-"Saved 300" -> {"transaction_type":"savings","amount":300.00,"category":"General","description":"Savings"}`;
+"Spent £4.5 at Sainsbury's" → {"transaction_type":"expense","amount":4.50,"category":"Grocery","description":"Sainsbury's"}
+"Add 50 Tesco" → {"transaction_type":"expense","amount":50.00,"category":"Grocery","description":"Tesco"}
+"Bought petrol 45" → {"transaction_type":"expense","amount":45.00,"category":"Car","description":"Petrol"}
+"Rent 850" → {"transaction_type":"expense","amount":850.00,"category":"Rent","description":"Monthly rent"}
+"Salary 2400" → {"transaction_type":"income","amount":2400.00,"category":"Salary","description":"Monthly salary"}
+"Freelance 500" → {"transaction_type":"income","amount":500.00,"category":"Freelancing","description":"Freelance work"}
+"Saved 300" → {"transaction_type":"savings","amount":300.00,"category":"Investment","description":"Savings"}`;
 
     console.log(`Parsing: "${userMessage}"`);
 
@@ -84,10 +76,9 @@ Examples:
     try {
       parsed = JSON.parse(responseText);
     } catch (e) {
-      console.log('Initial JSON parse failed, attempting regex extraction:', e.message);
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        console.error('No JSON in response:', responseText);
+        console.error('No JSON in response:', responseText, e);
         return null;
       }
       parsed = JSON.parse(jsonMatch[0]);
@@ -103,8 +94,14 @@ Examples:
     const validTypes = ['expense', 'income', 'savings'];
     if (!validTypes.includes(parsed.transaction_type)) {
       console.error('Invalid transaction_type:', parsed.transaction_type);
-      // Default to expense if invalid
-      parsed.transaction_type = 'expense';
+      parsed.transaction_type = 'expense'; // Default
+    }
+
+    // Validate category based on transaction_type
+    if (!isValidCategory(parsed.transaction_type, parsed.category)) {
+      console.log(`⚠️ Invalid category "${parsed.category}" for ${parsed.transaction_type}`);
+      parsed.category = getDefaultCategory(parsed.transaction_type);
+      console.log(`   Using default: ${parsed.category}`);
     }
 
     // Get amount
